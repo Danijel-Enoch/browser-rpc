@@ -122,6 +122,40 @@ browser-rpc/
 └── CLAUDE.md                   # Context for AI assistants
 ```
 
+## Development Commands
+
+```bash
+# Install dependencies
+bun install
+
+# Dev server (pass args after --)
+bun run dev -- --rpc https://mainnet.base.org
+
+# Dev server with bundled web assets (mirrors published layout)
+bun run dev:bundled -- --rpc https://mainnet.base.org
+
+# Web dev server
+bun run dev:web
+
+# Build web assets and sync them into the server package
+bun run bundle:web
+
+# Build server + bundled web assets (for testing the published layout)
+bun run build:bundled
+
+# Build everything
+bun run build
+
+# Run server (serves both RPC and web UI)
+bun run packages/server/src/index.ts -- --rpc https://mainnet.base.org
+
+# Run transfer test script
+bun run packages/scripts/src/transfer.ts
+
+# Publish to npm
+bun run publish:server
+```
+
 ## CLI Interface
 
 ```bash

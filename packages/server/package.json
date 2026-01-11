@@ -14,7 +14,9 @@
     "dev": "bun run --watch src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target node",
     "start": "bun run src/index.ts",
-    "prepublishOnly": "bun run build && cp -r ../web/dist ./web-dist"
+    "start:bundled": "bun run dist/index.js",
+    "sync-web": "rm -rf web-dist && cp -r ../web/dist ./web-dist",
+    "prepublishOnly": "bun run --filter @browser-rpc/web build && bun run sync-web && bun run build"
   },
   "dependencies": {
     "hono": "^4.0.0",
