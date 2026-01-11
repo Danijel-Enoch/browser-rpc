@@ -1,0 +1,22 @@
+{
+  "name": "@rpc-proxy/server",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "rpc-proxy": "dist/index.js"
+  },
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.5",
+    "typescript": "^5.0.0"
+  }
+}

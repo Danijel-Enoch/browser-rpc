@@ -1,0 +1,32 @@
+{
+  "name": "@rpc-proxy/web",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-router": "7.12.0",
+    "@rainbow-me/rainbowkit": "2.2.10",
+    "@tanstack/react-query": "5.90.16",
+    "wagmi": "3.3.1",
+    "viem": "2.44.1",
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.4.0",
+    "class-variance-authority": "0.7.1",
+    "lucide-react": "0.562.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.8",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.2",
+    "@tailwindcss/vite": "4.1.18",
+    "tailwindcss": "4.1.18",
+    "typescript": "5.9.3",
+    "vite": "7.3.1"
+  }
+}

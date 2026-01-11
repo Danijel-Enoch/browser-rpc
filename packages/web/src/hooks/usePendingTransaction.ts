@@ -1,0 +1,81 @@
+import { useQuery } from "@tanstack/react-query";
+
+export interface TransactionRequest {
+  from?: string;
+  to?: string;
+  gas?: string;
+  gasPrice?: string;
+  maxFeePerGas?: string;
+  maxPriorityFeePerGas?: string;
+  value?: string;
+  data?: string;
+  nonce?: string;
+  chainId?: string;
+}
+
+export interface PendingTransactionRequest {
+  type: "transaction";
+  id: string;
+  jsonRpcId: number | string;
+  transaction: TransactionRequest;
+  createdAt: number;
+}
+
+export interface PendingSignTypedDataRequest {
+  type: "signTypedData";
+  id: string;
+  jsonRpcId: number | string;
+  request: {
+    address: string;
+    typedData: unknown;
+  };
+  createdAt: number;
+}
+
+export interface PendingSignRequest {
+  type: "sign";
+  id: string;
+  jsonRpcId: number | string;
+  address: string;
+  message: string;
+  createdAt: number;
+}
+
+export type PendingRequest =
+  | PendingTransactionRequest
+  | PendingSignTypedDataRequest
+  | PendingSignRequest;
+
+async function fetchPendingRequest(id: string): Promise<PendingRequest> {
+  const response = await fetch(`/api/pending/${id}`);
+  if (!response.ok) {
+    throw new Error("Request not found or expired");
+  }
+  return response.json();
+}
+
+export function usePendingTransaction(id: string) {
+  return useQuery({
+    queryKey: ["pending", id],
+    queryFn: () => fetchPendingRequest(id),
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export async function completeRequest(
+  id: string,
+  result: { success: boolean; result?: string; error?: string }
+): Promise<void> {
+  const response = await fetch(`/api/complete/${id}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(result),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to complete request");
+  }
+}
