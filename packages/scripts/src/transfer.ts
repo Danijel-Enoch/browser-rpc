@@ -11,10 +11,9 @@ const client = createWalletClient({
 async function main() {
   // This will be intercepted by browser-rpc and opened in the browser
   // The actual "from" address will be set by the connected wallet
-
   const hash = await client.sendTransaction({
-    account: '0x179A862703a4adfb29896552DF9e307980D19285',
-    to: '0x0000000000000000000000000000000000000000',
+    account: null,
+    to: '0x179A862703a4adfb29896552DF9e307980D19285',
     value: parseEther('0.0000001'),
   })
 
