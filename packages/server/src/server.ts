@@ -28,6 +28,8 @@ export function createServer(config: ServerConfig) {
 
       // Handle batch requests
       if (Array.isArray(body)) {
+        const methods = body.map((req) => req.method).join(", ");
+        console.log(`  RPC batch: [${methods}]`);
         const responses = await Promise.all(
           body.map((req) =>
             handleRpcRequest(req, {
@@ -41,6 +43,7 @@ export function createServer(config: ServerConfig) {
       }
 
       // Single request
+      console.log(`  RPC: ${body.method}`);
       const response = await handleRpcRequest(body, {
         upstreamRpcUrl: config.upstreamRpcUrl,
         uiBaseUrl: `http://localhost:${config.uiPort}`,
