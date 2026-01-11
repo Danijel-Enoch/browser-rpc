@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { logger } from "hono/logger";
 import { serveStatic } from "hono/bun";
 import { existsSync } from "fs";
 import path from "path";
@@ -31,8 +30,15 @@ export function createServer(config: ServerConfig) {
   const app = new Hono();
 
   // Middleware
-  app.use("*", logger());
   app.use("*", cors());
+  app.use("*", async (c, next) => {
+    const start = Date.now();
+    await next();
+    const path = c.req.path;
+    if (path.startsWith("/tx") || path.startsWith("/api")) {
+      console.log(`[http] ${c.req.method} ${path} ${c.res.status} ${Date.now() - start}ms`);
+    }
+  });
 
   // Mount API routes
   app.route("/api", api);
