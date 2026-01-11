@@ -65,7 +65,7 @@ A local RPC proxy server that:
 | `eth_getTransactionReceipt` | Pass through to upstream RPC |
 | Everything else | Pass through to upstream RPC |
 
-The code should be structured to easily add new intercepted methods later.
+The code is structured to easily add new intercepted methods later (see `packages/server/src/rpc/methods.ts`).
 
 ## Project Structure
 
@@ -88,43 +88,46 @@ rpc-proxy/
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   │
-│   └── web/                    # React signing UI
+│   ├── web/                    # React signing UI
+│   │   ├── src/
+│   │   │   ├── main.tsx        # Entry point
+│   │   │   ├── App.tsx         # App wrapper with providers
+│   │   │   ├── pages/
+│   │   │   │   └── Transaction.tsx  # Transaction signing page
+│   │   │   ├── components/
+│   │   │   │   └── ui/         # Shadcn components (button, card)
+│   │   │   ├── hooks/
+│   │   │   │   └── usePendingTransaction.ts
+│   │   │   └── lib/
+│   │   │       ├── wagmi.ts    # Wagmi config
+│   │   │       └── utils.ts    # Shadcn utils
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   └── vite.config.ts
+│   │
+│   └── scripts/                # Test scripts (viem playground)
 │       ├── src/
-│       │   ├── main.tsx        # Entry point
-│       │   ├── App.tsx         # App wrapper with providers
-│       │   ├── pages/
-│       │   │   └── Transaction.tsx  # Transaction signing page
-│       │   ├── components/
-│       │   │   ├── WalletConnect.tsx
-│       │   │   ├── TransactionDetails.tsx
-│       │   │   └── ui/         # Shadcn components
-│       │   ├── hooks/
-│       │   │   └── usePendingTransaction.ts
-│       │   └── lib/
-│       │       ├── wagmi.ts    # Wagmi config
-│       │       └── utils.ts    # Shadcn utils
-│       ├── index.html
+│       │   └── transfer.ts     # Simple ETH transfer test
 │       ├── package.json
-│       ├── tsconfig.json
-│       ├── vite.config.ts
-│       ├── tailwind.config.js
-│       └── postcss.config.js
+│       └── tsconfig.json
 │
 ├── package.json                # Workspace root
 ├── bunfig.toml                 # Bun configuration
 ├── tsconfig.json               # Base TypeScript config
-└── README.md
+├── PLAN.md                     # This file
+└── CLAUDE.md                   # Context for AI assistants
 ```
 
 ## CLI Interface
 
 ```bash
 # Basic usage
-npx rpc-proxy --rpc https://mainnet.infura.io/v3/YOUR_KEY
+bun run packages/server/src/index.ts -- --rpc https://mainnet.base.org
 
 # With options
-npx rpc-proxy \
-  --rpc https://mainnet.infura.io/v3/YOUR_KEY \
+bun run packages/server/src/index.ts -- \
+  --rpc https://mainnet.base.org \
   --port 8545 \
   --ui-port 5173 \
   --no-open  # Disable auto-opening browser
@@ -142,54 +145,62 @@ npx rpc-proxy \
 ## Tech Stack
 
 ### Server (`packages/server`)
-- **Runtime**: Node.js (via Bun)
+- **Runtime**: Bun
 - **Framework**: Hono
 - **Language**: TypeScript
 
 ### Web UI (`packages/web`)
-- **Build**: Vite
-- **Framework**: React 18
+- **Build**: Vite 7
+- **Framework**: React 19
 - **Language**: TypeScript
-- **Wallet**: Wagmi + Rainbowkit
-- **Styling**: Tailwind CSS + Shadcn/ui
+- **Wallet**: Wagmi 2.16 + RainbowKit 2.2 + Porto
+- **Styling**: Tailwind CSS 4 + Shadcn/ui
+
+### Scripts (`packages/scripts`)
+- **Runtime**: Bun
+- **Library**: viem 2.37
 
 ### Tooling
 - **Package Manager**: Bun
 - **Workspaces**: Bun workspaces
 
-## Implementation Phases
+## Implementation Status
 
-### Phase 1: Basic Infrastructure
-- [ ] Set up monorepo with Bun workspaces
-- [ ] Create server package with Hono
-- [ ] Create web package with Vite + React
-- [ ] Implement basic RPC pass-through
+### Phase 1: Basic Infrastructure ✅
+- [x] Set up monorepo with Bun workspaces
+- [x] Create server package with Hono
+- [x] Create web package with Vite + React
+- [x] Implement basic RPC pass-through
 
-### Phase 2: Transaction Interception
-- [ ] Implement pending transaction store
-- [ ] Add `eth_sendTransaction` interception
-- [ ] Add REST API for web UI (`/api/pending/:id`, `/api/complete/:id`)
-- [ ] Implement browser opening logic
+### Phase 2: Transaction Interception ✅
+- [x] Implement pending transaction store
+- [x] Add `eth_sendTransaction` interception
+- [x] Add REST API for web UI (`/api/pending/:id`, `/api/complete/:id`)
+- [x] Implement browser opening logic
 
-### Phase 3: Web UI
-- [ ] Set up Wagmi + Rainbowkit
-- [ ] Set up Shadcn/ui
-- [ ] Build transaction review page
-- [ ] Implement wallet connection
-- [ ] Implement transaction execution
-- [ ] Add callback to server on completion
+### Phase 3: Web UI ✅
+- [x] Set up Wagmi + Rainbowkit
+- [x] Set up Shadcn/ui (button, card)
+- [x] Build transaction review page
+- [x] Implement wallet connection
+- [x] Implement transaction execution
+- [x] Add callback to server on completion
 
-### Phase 4: Polish
-- [ ] Add CLI argument parsing
-- [ ] Add error handling
-- [ ] Add timeout handling for pending transactions
+### Phase 4: Testing & Polish 🔄
+- [x] Add CLI argument parsing
+- [x] Add timeout handling for pending transactions (5 min)
+- [x] Create test scripts package
+- [ ] **NEXT: End-to-end test with transfer script**
 - [ ] Test with Foundry scripts
+- [ ] Error handling improvements
+- [ ] UI polish
 
 ## Future Considerations (Not in MVP)
 
 - Batch transaction page (queue multiple txs)
-- `eth_signTypedData` support (EIP-712)
+- `eth_signTypedData` support (EIP-712) - basic structure exists
 - Transaction simulation/preview
 - Gas estimation display
 - Multi-chain support in single session
 - Persistent configuration file
+- npm package publishing
