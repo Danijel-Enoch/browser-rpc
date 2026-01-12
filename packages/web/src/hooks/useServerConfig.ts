@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { type UseQueryResult, useQuery } from '@tanstack/react-query'
 
 export interface ServerConfig {
   fromAddress: string | null
@@ -12,8 +12,8 @@ async function fetchServerConfig(): Promise<ServerConfig> {
   return response.json()
 }
 
-export function useServerConfig() {
-  return useQuery({
+export function useServerConfig(): UseQueryResult<ServerConfig, Error> {
+  return useQuery<ServerConfig, Error>({
     queryKey: ['serverConfig'],
     queryFn: fetchServerConfig,
     staleTime: Infinity, // Config doesn't change during a session

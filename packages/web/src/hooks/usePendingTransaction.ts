@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { type UseQueryResult, useQuery } from '@tanstack/react-query'
 
 export interface TransactionRequest {
   from?: string
@@ -54,8 +54,10 @@ async function fetchPendingRequest(id: string): Promise<PendingRequest> {
   return response.json()
 }
 
-export function usePendingTransaction(id: string) {
-  return useQuery({
+export function usePendingTransaction(
+  id: string
+): UseQueryResult<PendingRequest, Error> {
+  return useQuery<PendingRequest, Error>({
     queryKey: ['pending', id],
     queryFn: () => fetchPendingRequest(id),
     retry: false,

@@ -18,7 +18,7 @@ const queryClient = new QueryClient()
 // Context to provide the chain info to child components
 const ChainContext = createContext<Chain | null>(null)
 
-export function useProxyChain() {
+export function useProxyChain(): Chain {
   const chain = useContext(ChainContext)
   if (!chain) {
     throw new Error('useProxyChain must be used within App')
@@ -49,9 +49,13 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    createWagmiConfig()
-      .then(setConfigResult)
-      .catch((err) => setError(err.message))
+    function handleError(err: unknown): void {
+      const message =
+        err instanceof Error ? err.message : 'Failed to connect to proxy'
+      setError(message)
+    }
+
+    createWagmiConfig().then(setConfigResult, handleError)
   }, [])
 
   if (error) {

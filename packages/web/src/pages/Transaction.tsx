@@ -30,12 +30,11 @@ import {
 import { useServerConfig } from '@/hooks/useServerConfig'
 import { getBlockExplorerTxUrl } from '@/lib/wagmi'
 
-function StatusIndicator({
-  status,
-}: {
-  status: 'error' | 'warning' | 'success' | 'pending'
-}) {
-  const colors = {
+type StatusIndicatorStatus = 'error' | 'warning' | 'success' | 'pending'
+type ExecutionStatus = 'idle' | 'pending' | 'success' | 'error'
+
+function StatusIndicator({ status }: { status: StatusIndicatorStatus }) {
+  const colors: Record<StatusIndicatorStatus, string> = {
     error: 'bg-red-500',
     warning: 'bg-amber-500',
     success: 'bg-primary',
@@ -55,7 +54,7 @@ function ChainMismatchWarning({
 }) {
   const { switchChain, isPending } = useSwitchChain()
 
-  const handleSwitch = () => {
+  function handleSwitch(): void {
     switchChain({ chainId: expectedChainId })
   }
 
@@ -117,6 +116,16 @@ function AddressMismatchWarning({
   )
 }
 
+function getRequestTitle(request: PendingRequest) {
+  if (request.type === 'transaction') {
+    return 'Transaction Request'
+  }
+  if (request.type === 'signTypedData') {
+    return 'Sign Typed Data'
+  }
+  return 'Sign Message'
+}
+
 export default function TransactionPage() {
   const { id } = useParams<{ id: string }>()
   const { data: pendingRequest, isLoading, error } = usePendingTransaction(id!)
@@ -163,6 +172,28 @@ export default function TransactionPage() {
     )
   }
 
+  const request: PendingRequest = pendingRequest
+
+  function renderFooter() {
+    if (!isConnected) {
+      return (
+        <p className="text-muted-foreground w-full text-center font-mono text-sm">
+          Connect your wallet to continue
+        </p>
+      )
+    }
+    if (hasChainMismatch) {
+      return (
+        <p className="text-muted-foreground w-full text-center font-mono text-sm">
+          Switch to the correct chain to continue
+        </p>
+      )
+    }
+    return <ExecuteButton request={request} />
+  }
+
+  const footerContent = renderFooter()
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-xl">
@@ -171,13 +202,7 @@ export default function TransactionPage() {
             <div className="flex items-center gap-3">
               <div className="bg-primary h-8 w-1" />
               <div>
-                <CardTitle>
-                  {pendingRequest.type === 'transaction'
-                    ? 'Transaction Request'
-                    : pendingRequest.type === 'signTypedData'
-                      ? 'Sign Typed Data'
-                      : 'Sign Message'}
-                </CardTitle>
+                <CardTitle>{getRequestTitle(request)}</CardTitle>
                 <CardDescription>
                   Review and execute with your wallet
                 </CardDescription>
@@ -205,29 +230,11 @@ export default function TransactionPage() {
                 connectedAddress={connectedAddress}
               />
             )}
-          {pendingRequest.type === 'transaction' ? (
-            <TransactionDetails request={pendingRequest} />
-          ) : pendingRequest.type === 'signTypedData' ? (
-            <SignTypedDataDetails request={pendingRequest} />
-          ) : (
-            <SignMessageDetails request={pendingRequest} />
-          )}
+          <RequestDetails request={request} />
         </CardContent>
 
         <CardFooter className="border-border border-t pt-6">
-          {isConnected ? (
-            hasChainMismatch ? (
-              <p className="text-muted-foreground w-full text-center font-mono text-sm">
-                Switch to the correct chain to continue
-              </p>
-            ) : (
-              <ExecuteButton request={pendingRequest} />
-            )
-          ) : (
-            <p className="text-muted-foreground w-full text-center font-mono text-sm">
-              Connect your wallet to continue
-            </p>
-          )}
+          {footerContent}
         </CardFooter>
       </Card>
     </div>
@@ -336,9 +343,7 @@ function Field({
 
 function ExecuteButton({ request }: { request: PendingRequest }) {
   const proxyChain = useProxyChain()
-  const [status, setStatus] = useState<
-    'idle' | 'pending' | 'success' | 'error'
-  >('idle')
+  const [status, setStatus] = useState<ExecutionStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [txHash, setTxHash] = useState<string | null>(null)
   const [explorerUrl, setExplorerUrl] = useState<string | null>(null)
@@ -347,58 +352,12 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
   const { signMessageAsync } = useSignMessage()
   const { signTypedDataAsync } = useSignTypedData()
 
-  const handleExecute = async () => {
+  async function handleExecute(): Promise<void> {
     setStatus('pending')
     setErrorMessage('')
 
     try {
-      let result: string
-
-      if (request.type === 'transaction') {
-        const tx = request.transaction
-        const hash = await sendTransactionAsync({
-          to: tx.to as Hex | undefined,
-          value: tx.value ? BigInt(tx.value) : undefined,
-          data: tx.data as Hex | undefined,
-          gas: tx.gas ? BigInt(tx.gas) : undefined,
-          gasPrice: tx.gasPrice ? BigInt(tx.gasPrice) : undefined,
-          maxFeePerGas: tx.maxFeePerGas ? BigInt(tx.maxFeePerGas) : undefined,
-          maxPriorityFeePerGas: tx.maxPriorityFeePerGas
-            ? BigInt(tx.maxPriorityFeePerGas)
-            : undefined,
-          nonce: tx.nonce ? parseInt(tx.nonce, 16) : undefined,
-          chainId: tx.chainId ? parseInt(tx.chainId, 16) : undefined,
-        })
-
-        try {
-          await notifyTransactionHash(request.id, hash)
-        } catch (notifyError) {
-          console.warn(
-            'Failed to notify server of transaction hash',
-            notifyError
-          )
-        }
-
-        setTxHash(hash)
-        const explorer = getBlockExplorerTxUrl(proxyChain, hash)
-        setExplorerUrl(explorer ?? null)
-        result = hash
-      } else if (request.type === 'signTypedData') {
-        const typedData = request.request.typedData as any
-        const signature = await signTypedDataAsync({
-          domain: typedData.domain,
-          types: typedData.types,
-          primaryType: typedData.primaryType,
-          message: typedData.message,
-        })
-        result = signature
-      } else {
-        const signature = await signMessageAsync({
-          message: request.message,
-        })
-        result = signature
-      }
-
+      const result = await executeRequest()
       await completeRequest(request.id, { success: true, result })
       setStatus('success')
     } catch (err) {
@@ -416,7 +375,67 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
     }
   }
 
-  const handleReject = async () => {
+  async function executeRequest(): Promise<string> {
+    if (request.type === 'transaction') {
+      return executeTransactionRequest(request)
+    }
+    if (request.type === 'signTypedData') {
+      return executeSignTypedDataRequest(request)
+    }
+    return executeSignMessageRequest(request)
+  }
+
+  async function executeTransactionRequest(
+    transactionRequest: Extract<PendingRequest, { type: 'transaction' }>
+  ): Promise<string> {
+    const tx = transactionRequest.transaction
+    const hash = await sendTransactionAsync({
+      to: tx.to as Hex | undefined,
+      value: tx.value ? BigInt(tx.value) : undefined,
+      data: tx.data as Hex | undefined,
+      gas: tx.gas ? BigInt(tx.gas) : undefined,
+      gasPrice: tx.gasPrice ? BigInt(tx.gasPrice) : undefined,
+      maxFeePerGas: tx.maxFeePerGas ? BigInt(tx.maxFeePerGas) : undefined,
+      maxPriorityFeePerGas: tx.maxPriorityFeePerGas
+        ? BigInt(tx.maxPriorityFeePerGas)
+        : undefined,
+      nonce: tx.nonce ? parseInt(tx.nonce, 16) : undefined,
+      chainId: tx.chainId ? parseInt(tx.chainId, 16) : undefined,
+    })
+
+    await notifyTransactionHash(transactionRequest.id, hash).catch(
+      (notifyError) => {
+        console.warn('Failed to notify server of transaction hash', notifyError)
+      }
+    )
+
+    setTxHash(hash)
+    const explorer = getBlockExplorerTxUrl(proxyChain, hash)
+    setExplorerUrl(explorer ?? null)
+    return hash
+  }
+
+  async function executeSignTypedDataRequest(
+    typedDataRequest: Extract<PendingRequest, { type: 'signTypedData' }>
+  ): Promise<string> {
+    const typedData = typedDataRequest.request.typedData as any
+    return signTypedDataAsync({
+      domain: typedData.domain,
+      types: typedData.types,
+      primaryType: typedData.primaryType,
+      message: typedData.message,
+    })
+  }
+
+  async function executeSignMessageRequest(
+    signMessageRequest: Extract<PendingRequest, { type: 'sign' }>
+  ): Promise<string> {
+    return signMessageAsync({
+      message: signMessageRequest.message,
+    })
+  }
+
+  async function handleReject(): Promise<void> {
     await completeRequest(request.id, {
       success: false,
       error: 'User rejected request',
@@ -495,4 +514,14 @@ function ExecuteButton({ request }: { request: PendingRequest }) {
       </Button>
     </div>
   )
+}
+
+function RequestDetails({ request }: { request: PendingRequest }) {
+  if (request.type === 'transaction') {
+    return <TransactionDetails request={request} />
+  }
+  if (request.type === 'signTypedData') {
+    return <SignTypedDataDetails request={request} />
+  }
+  return <SignMessageDetails request={request} />
 }
