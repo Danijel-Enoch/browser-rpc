@@ -22,43 +22,27 @@ export function useProxyChain() {
   return chain
 }
 
-// Hook to detect system color scheme
-function useColorScheme() {
-  const [isDark, setIsDark] = useState(() =>
-    window.matchMedia('(prefers-color-scheme: dark)').matches
-  )
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = (e: MediaQueryListEvent) => setIsDark(e.matches)
-    mediaQuery.addEventListener('change', handler)
-    return () => mediaQuery.removeEventListener('change', handler)
-  }, [])
-
-  return isDark
+// RainbowKit theme - automatically switches based on prefers-color-scheme
+const theme = {
+  lightMode: lightTheme({
+    accentColor: 'hsl(160, 85%, 35%)',
+    accentColorForeground: 'hsl(0, 0%, 100%)',
+    borderRadius: 'none',
+    fontStack: 'system',
+  }),
+  darkMode: darkTheme({
+    accentColor: 'hsl(160, 100%, 45%)',
+    accentColorForeground: 'hsl(220, 15%, 6%)',
+    borderRadius: 'none',
+    fontStack: 'system',
+  }),
 }
-
-// RainbowKit themes to match industrial aesthetic
-const industrialDarkTheme = darkTheme({
-  accentColor: 'hsl(160, 100%, 45%)',
-  accentColorForeground: 'hsl(220, 15%, 6%)',
-  borderRadius: 'none',
-  fontStack: 'system',
-})
-
-const industrialLightTheme = lightTheme({
-  accentColor: 'hsl(160, 85%, 35%)',
-  accentColorForeground: 'hsl(0, 0%, 100%)',
-  borderRadius: 'none',
-  fontStack: 'system',
-})
 
 export default function App() {
   const [configResult, setConfigResult] = useState<WagmiConfigResult | null>(
     null
   )
   const [error, setError] = useState<string | null>(null)
-  const isDark = useColorScheme()
 
   useEffect(() => {
     createWagmiConfig()
@@ -98,7 +82,7 @@ export default function App() {
   return (
     <WagmiProvider config={configResult.config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={isDark ? industrialDarkTheme : industrialLightTheme}>
+        <RainbowKitProvider theme={theme}>
           <ChainContext.Provider value={configResult.chain}>
             <div className="bg-background min-h-screen">
               <Routes>
