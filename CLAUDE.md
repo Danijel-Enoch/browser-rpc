@@ -8,9 +8,9 @@ This file provides context for AI assistants working on this project.
 
 ## Current State
 
-**Status: MVP feature-complete, ready for end-to-end testing**
+**Status: MVP feature-complete, tested with viem scripts and Hardhat**
 
-All core components are built and the project compiles successfully. The next step is testing the full flow with a real transaction.
+All core components are built and working. The proxy has been tested with Hardhat Ignition deployments.
 
 ### What's Working
 
@@ -19,22 +19,22 @@ All core components are built and the project compiles successfully. The next st
 - Web UI builds and renders
 - Wallet connection via RainbowKit works
 - API endpoints for pending transactions exist
-
-### What Needs Testing
-
 - Full end-to-end flow: script → server → browser → wallet → back to script
 - The transfer test script in `packages/scripts/src/transfer.ts` is ready to use
+- Hardhat integration with `--from` flag for account handling
 
 ## Quick Start for Testing
 
 ```bash
 # Terminal 1: Build web UI and start the server
 bun run dev:web
-bun run dev:server -- --rpc https://mainnet.base.org
+bun run dev:server -- --rpc https://mainnet.base.org --from 0xYourWalletAddress
 
 # Terminal 2: Run the test transfer script
 bun run packages/scripts/src/transfer.ts
 ```
+
+Note: The `--from` flag specifies your wallet address. This is returned for `eth_accounts` calls, which Hardhat needs for nonce lookups and gas estimation.
 
 When the script runs, it should:
 
@@ -79,6 +79,8 @@ When the script runs, it should:
 6. **Dynamic chain detection**: The web UI fetches the chain ID from the proxy via `eth_chainId` on startup, then looks up chain metadata from viem's chain list. No hardcoded chains.
 
 7. **Chain mismatch prevention**: The UI compares the proxy's chain with the wallet's connected chain and blocks execution if they don't match, offering a "Switch Chain" button.
+
+8. **Account handling**: The `--from` flag specifies the wallet address returned for `eth_accounts` and `eth_requestAccounts` calls. This is required for Hardhat, which queries the account for nonce lookups and gas estimation before submitting transactions. The address must match the wallet used in the browser.
 
 ## Publishing
 
@@ -130,7 +132,7 @@ bun install
 bun run --filter @browser-rpc/web build
 
 # Run server (serves both RPC and web UI)
-bun run packages/server/src/index.ts -- --rpc https://mainnet.base.org
+bun run packages/server/src/index.ts -- --rpc https://mainnet.base.org --from 0xYourWalletAddress
 
 # Build everything
 bun run build

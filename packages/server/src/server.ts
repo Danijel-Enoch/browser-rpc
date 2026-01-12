@@ -24,6 +24,7 @@ const webDistPath = resolveWebDistPath()
 export interface ServerConfig {
   upstreamRpcUrl: string
   port: number
+  fromAddress?: string
   onPendingRequest: (id: string, url: string) => void
 }
 
@@ -53,6 +54,7 @@ export function createServer(config: ServerConfig) {
             handleRpcRequest(req, {
               upstreamRpcUrl: config.upstreamRpcUrl,
               uiBaseUrl: `http://localhost:${config.port}`,
+              fromAddress: config.fromAddress,
               onPendingRequest: config.onPendingRequest,
             })
           )
@@ -65,6 +67,7 @@ export function createServer(config: ServerConfig) {
       const response = await handleRpcRequest(body, {
         upstreamRpcUrl: config.upstreamRpcUrl,
         uiBaseUrl: `http://localhost:${config.port}`,
+        fromAddress: config.fromAddress,
         onPendingRequest: config.onPendingRequest,
       })
 

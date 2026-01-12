@@ -13,6 +13,7 @@ import type {
 export interface RpcHandlerConfig {
   upstreamRpcUrl: string
   uiBaseUrl: string
+  fromAddress?: string
   onPendingRequest: (id: string, url: string) => void
 }
 
@@ -21,6 +22,16 @@ export async function handleRpcRequest(
   config: RpcHandlerConfig
 ): Promise<JsonRpcResponse> {
   const { method, params, id } = request
+
+  // Handle eth_accounts and eth_requestAccounts specially
+  if (method === 'eth_accounts' || method === 'eth_requestAccounts') {
+    const accounts = config.fromAddress ? [config.fromAddress] : []
+    return {
+      jsonrpc: '2.0',
+      id,
+      result: accounts,
+    }
+  }
 
   if (shouldIntercept(method)) {
     return handleInterceptedMethod(request, config)

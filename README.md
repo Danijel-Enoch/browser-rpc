@@ -73,7 +73,7 @@ const hash = await client.sendTransaction({
 })
 ```
 
-### With Foundry (not tested)
+### With Foundry
 
 ```bash
 # Start the proxy
@@ -83,7 +83,7 @@ browser-rpc --rpc https://mainnet.base.org
 forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
 ```
 
-### With Hardhat (not tested)
+### With Hardhat
 
 ```javascript
 // hardhat.config.js
@@ -97,16 +97,23 @@ module.exports = {
 ```
 
 ```bash
+# Start the proxy with your wallet address
+browser-rpc --rpc https://mainnet.base.org --from 0xYourWalletAddress
+
+# In another terminal
 npx hardhat run scripts/deploy.js --network browserRpc
 ```
 
+> **Note:** The `--from` flag is required for Hardhat. Hardhat calls `eth_accounts` to get the signer address for nonce lookups and gas estimation. The address must match the wallet you'll use to sign in the browser.
+
 ## CLI Options
 
-| Flag           | Default    | Description                      |
-| -------------- | ---------- | -------------------------------- |
-| `--rpc`, `-r`  | (required) | Upstream RPC URL for read calls  |
-| `--port`, `-p` | `8545`     | Port for the proxy server        |
-| `--no-open`    | `false`    | Disable auto-opening the browser |
+| Flag           | Default    | Description                                          |
+| -------------- | ---------- | ---------------------------------------------------- |
+| `--rpc`, `-r`  | (required) | Upstream RPC URL for read calls                      |
+| `--from`, `-f` | (none)     | Wallet address (returned for `eth_accounts`)         |
+| `--port`, `-p` | `8545`     | Port for the proxy server                            |
+| `--no-open`    | `false`    | Disable auto-opening the browser                     |
 
 ## How It Works
 
