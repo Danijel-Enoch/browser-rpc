@@ -48,6 +48,12 @@ npx browser-rpc --rpc https://mainnet.base.org
 browser-rpc --rpc https://mainnet.base.org
 ```
 
+If you're using Hardhat, you'll also need to specify the wallet address you'll use to sign transactions:
+
+```bash
+browser-rpc --rpc https://mainnet.base.org --from 0xYourWalletAddress
+```
+
 2. Configure your script to use `http://localhost:8545` as the RPC URL
 
 3. Run your script - when it sends a transaction, your browser will open for approval
@@ -61,7 +67,7 @@ import { base } from 'viem/chains'
 const client = createWalletClient({
   chain: base,
   transport: http('http://localhost:8545', {
-    timeout: 1000 * 60, // Viem default timeout is 10 seconds
+    timeout: 60_000, // 1 minute to sign in the browser
   }),
 })
 
@@ -76,10 +82,6 @@ const hash = await client.sendTransaction({
 ### With Foundry
 
 ```bash
-# Start the proxy
-browser-rpc --rpc https://mainnet.base.org
-
-# In another terminal, run your script
 forge script script/Deploy.s.sol \
   --rpc-url http://localhost:8545 \
   --broadcast \
@@ -87,27 +89,21 @@ forge script script/Deploy.s.sol \
   --sender 0xYourWalletAddress
 ```
 
-> **Note:** The `--unlocked` flag tells Foundry to send `eth_sendTransaction` to the RPC instead of signing locally. The `--sender` flag specifies which address to use.
+> **Note:** The `--unlocked` flag tells Foundry to send `eth_sendTransaction` to the RPC instead of signing locally. The `--sender` flag specifies which public address you'll deploy from.
 
-### With Hardhat
+### With Hardhat 3
 
 ```javascript
 // hardhat.config.js
-module.exports = {
+const config = {
   networks: {
-    browserRpc: {
+    base: {
+      type: 'http',
+      chainType: 'op',
       url: 'http://localhost:8545',
     },
   },
 }
-```
-
-```bash
-# Start the proxy with your wallet address
-browser-rpc --rpc https://mainnet.base.org --from 0xYourWalletAddress
-
-# In another terminal
-npx hardhat run scripts/deploy.js --network browserRpc
 ```
 
 > **Note:** The `--from` flag is required for Hardhat. Hardhat calls `eth_accounts` to get the signer address for nonce lookups and gas estimation. The address must match the wallet you'll use to sign in the browser.
