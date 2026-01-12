@@ -93,6 +93,13 @@ export function createServer(config: ServerConfig) {
   // Health check
   app.get('/health', (c) => c.json({ ok: true }))
 
+  // Server config endpoint (for frontend)
+  app.get('/api/config', (c) =>
+    c.json({
+      fromAddress: config.fromAddress || null,
+    })
+  )
+
   // Serve static assets from web dist
   app.use('/assets/*', serveStatic({ root: webDistPath }))
 

@@ -107,6 +107,7 @@ console.log(`
   Use http://localhost:${port} as your RPC URL in Foundry/Hardhat.
 
   Example:
-    forge script script/Deploy.s.sol --rpc-url http://localhost:${port}
+    forge script script/Deploy.s.sol --rpc-url http://localhost:${port} \\
+      --broadcast --unlocked --sender 0xYourWallet
 ${!options.from ? '\n  \x1b[33m⚠ Warning: No --from address specified, which may cause issues in Hardhat.\x1b[0m\n' : ''}
 `)

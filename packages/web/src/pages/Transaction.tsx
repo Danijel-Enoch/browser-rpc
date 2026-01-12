@@ -27,6 +27,7 @@ import {
   notifyTransactionHash,
   usePendingTransaction,
 } from '@/hooks/usePendingTransaction'
+import { useServerConfig } from '@/hooks/useServerConfig'
 import { getBlockExplorerTxUrl } from '@/lib/wagmi'
 
 function ChainMismatchWarning({
@@ -65,14 +66,51 @@ function ChainMismatchWarning({
   )
 }
 
+function AddressMismatchWarning({
+  expectedAddress,
+  connectedAddress,
+}: {
+  expectedAddress: string
+  connectedAddress: string
+}) {
+  const truncate = (addr: string) =>
+    `${addr.slice(0, 6)}...${addr.slice(-4)}`
+
+  return (
+    <div className="bg-yellow-500/10 border-yellow-500/20 mb-4 rounded-lg border p-4">
+      <p className="text-yellow-600 dark:text-yellow-500 mb-2 font-medium">
+        Address Mismatch
+      </p>
+      <p className="text-muted-foreground text-sm">
+        The server expects transactions from{' '}
+        <code className="bg-muted rounded px-1 py-0.5 text-xs">
+          {truncate(expectedAddress)}
+        </code>
+        , but you're connected with{' '}
+        <code className="bg-muted rounded px-1 py-0.5 text-xs">
+          {truncate(connectedAddress)}
+        </code>
+        . The transaction may fail or be sent from a different account than
+        expected.
+      </p>
+    </div>
+  )
+}
+
 export default function TransactionPage() {
   const { id } = useParams<{ id: string }>()
   const { data: pendingRequest, isLoading, error } = usePendingTransaction(id!)
-  const { isConnected } = useAccount()
+  const { isConnected, address: connectedAddress } = useAccount()
   const walletChainId = useChainId()
   const proxyChain = useProxyChain()
+  const { data: serverConfig } = useServerConfig()
 
   const hasChainMismatch = isConnected && walletChainId !== proxyChain.id
+  const hasAddressMismatch =
+    isConnected &&
+    serverConfig?.fromAddress &&
+    connectedAddress &&
+    serverConfig.fromAddress.toLowerCase() !== connectedAddress.toLowerCase()
 
   if (isLoading) {
     return (
@@ -126,6 +164,12 @@ export default function TransactionPage() {
               expectedChainName={proxyChain.name}
               expectedChainId={proxyChain.id}
               walletChainId={walletChainId}
+            />
+          )}
+          {hasAddressMismatch && serverConfig?.fromAddress && connectedAddress && (
+            <AddressMismatchWarning
+              expectedAddress={serverConfig.fromAddress}
+              connectedAddress={connectedAddress}
             />
           )}
           {pendingRequest.type === 'transaction' ? (

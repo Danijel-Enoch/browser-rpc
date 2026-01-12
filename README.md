@@ -80,8 +80,14 @@ const hash = await client.sendTransaction({
 browser-rpc --rpc https://mainnet.base.org
 
 # In another terminal, run your script
-forge script script/Deploy.s.sol --rpc-url http://localhost:8545 --broadcast
+forge script script/Deploy.s.sol \
+  --rpc-url http://localhost:8545 \
+  --broadcast \
+  --unlocked \
+  --sender 0xYourWalletAddress
 ```
+
+> **Note:** The `--unlocked` flag tells Foundry to send `eth_sendTransaction` to the RPC instead of signing locally. The `--sender` flag specifies which address to use.
 
 ### With Hardhat
 
