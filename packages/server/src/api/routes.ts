@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
+import { logger } from '../logger.js'
 import {
   getAllPendingIds,
   getPendingRequest,
@@ -39,11 +40,11 @@ api.post('/tx/:id/hash', async (c) => {
 
   const request = getPendingRequest(id)
   if (!request) {
-    console.warn(`\x1b[31mx Unknown request:\x1b[0m ${id}`)
+    logger.error(`Unknown request: ${id}`)
     return c.json({ error: 'Request not found or expired' }, 404)
   }
 
-  console.log(`\x1b[32m+ Submitted:\x1b[0m ${body.hash}`)
+  logger.success(`Submitted: ${body.hash}`)
   return c.json({ ok: true })
 })
 

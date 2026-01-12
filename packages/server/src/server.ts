@@ -7,6 +7,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { api } from './api/routes.js'
+import { logger } from './logger.js'
 import { type RpcHandlerConfig, handleRpcRequest } from './rpc/handler.js'
 import type { JsonRpcRequest } from './rpc/types.js'
 
@@ -56,7 +57,7 @@ export function createServer(config: ServerConfig): Hono {
       // Handle batch requests
       if (Array.isArray(body)) {
         const methods = body.map((req: JsonRpcRequest) => req.method).join(', ')
-        console.log(`\x1b[2m<- [${methods}]\x1b[0m`)
+        logger.dim(`<- [${methods}]`)
         const responses = await Promise.all(
           body.map((req: JsonRpcRequest) => handleRpcRequest(req, rpcConfig))
         )
@@ -64,7 +65,7 @@ export function createServer(config: ServerConfig): Hono {
       }
 
       // Single request
-      console.log(`\x1b[2m<- ${body.method}\x1b[0m`)
+      logger.dim(`<- ${body.method}`)
       const response = await handleRpcRequest(body, rpcConfig)
       return c.json(response)
     } catch {

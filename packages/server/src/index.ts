@@ -4,34 +4,35 @@ import { serve } from '@hono/node-server'
 import { spawn } from 'child_process'
 import { program } from 'commander'
 
+import { bold, dim, logger } from './logger.js'
 import { createServer } from './server.js'
 
 // Show help with examples when no args provided
 if (process.argv.length <= 2) {
-  console.log(`
+  logger.raw(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║                        browser-rpc                            ║
 ╚═══════════════════════════════════════════════════════════════╝
 
-\x1b[1mUSAGE\x1b[0m
+${bold('USAGE')}
 
   browser-rpc --rpc <upstream-url> [--from <address>]
 
-\x1b[1mOPTIONS\x1b[0m
+${bold('OPTIONS')}
 
   -r, --rpc <url>       Upstream RPC URL (required)
   -f, --from <address>  Your wallet address (required for Hardhat)
   -p, --port <number>   Server port (default: 8545)
   --no-open             Don't auto-open browser for signing
 
-\x1b[1mHOW IT WORKS\x1b[0m
+${bold('HOW IT WORKS')}
 
   1. Point your dev tool at http://localhost:8545
   2. When a transaction is sent, your browser opens
   3. Connect wallet, review, and sign
   4. Transaction hash returns to your script
 
-\x1b[2mDocs: https://github.com/gskril/browser-rpc\x1b[0m
+${dim('Docs: https://github.com/gskril/browser-rpc')}
 `)
   process.exit(0)
 }
@@ -68,7 +69,7 @@ function openBrowser(url: string): void {
   try {
     spawn(command, args, { detached: true, stdio: 'ignore' }).unref()
   } catch (error) {
-    console.error(`Failed to open browser: ${error}`)
+    logger.fatal(`Failed to open browser: ${error}`)
   }
 }
 
@@ -77,7 +78,7 @@ const server = createServer({
   port,
   fromAddress: options.from,
   onPendingRequest: (id, url) => {
-    console.log(`\n\x1b[33m⏳ Awaiting approval:\x1b[0m ${url}`)
+    logger.pending(`Awaiting approval: ${url}`)
     if (options.open) {
       openBrowser(url)
     }
@@ -89,7 +90,7 @@ serve({
   port,
 })
 
-console.log(`
+logger.raw(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║                        browser-rpc                            ║
 ╚═══════════════════════════════════════════════════════════════╝
@@ -104,5 +105,8 @@ console.log(`
   Example:
     forge script script/Deploy.s.sol --rpc-url http://localhost:${port} \\
       --broadcast --unlocked --sender 0xYourWallet
-${!options.from ? '\n  \x1b[33m⚠ Warning: No --from address specified, which may cause issues in Hardhat.\x1b[0m\n' : ''}
 `)
+
+if (!options.from) {
+  logger.warn('Warning: No --from address specified, which may cause issues in Hardhat.')
+}
