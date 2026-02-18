@@ -11,6 +11,7 @@
     "build": "bun run build:web && bun run build:server",
     "start": "bun run --filter browser-rpc start",
     "publish:server": "bun run build && cp README.md packages/server/ && cd packages/server && npm publish --provenance --access public",
+    "polygon:proxy": "bun run packages/server/src/index.ts -- --rpc https://polygon-bor-rpc.publicnode.com --port 8548 --no-open",
     "format": "prettier --write ."
   },
   "devDependencies": {
