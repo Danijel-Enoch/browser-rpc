@@ -25,7 +25,6 @@
     "sync-web": "rm -rf web-dist && cp -r ../web/dist ./web-dist"
   },
   "dependencies": {
-    "@hono/node-server": "1.19.8",
     "hono": "4.11.3",
     "commander": "14.0.2"
   },

@@ -1,6 +1,5 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
-import { serve } from '@hono/node-server'
 import { program } from 'commander'
 
 import { bold, dim, logger } from './logger.js'
@@ -30,7 +29,7 @@ ${bold('HOW IT WORKS')}
   1. Point your dev tool at http://localhost:8545
   2. When a transaction is sent, your browser opens
   3. Connect wallet, review, and sign
-  4. Transaction hash returns to your script
+  4. Transaction hash returns to the script
 
 ${dim('Docs: https://github.com/gskril/browser-rpc')}
 `)
@@ -80,7 +79,7 @@ async function main(): Promise<void> {
 
   const fromLine = options.from ? `  From:         ${options.from}\n` : ''
 
-  const server = createServer({
+  const app = createServer({
     upstreamRpcUrl: options.rpc,
     port,
     fromAddress: options.from,
@@ -90,11 +89,6 @@ async function main(): Promise<void> {
         openBrowser(url)
       }
     },
-  })
-
-  serve({
-    fetch: server.fetch,
-    port,
   })
 
   logger.raw(`
@@ -119,6 +113,11 @@ ${fromLine}  Auto-open:    ${options.open ? 'enabled' : 'disabled'}
       'Warning: No --from address specified, which may cause issues in Hardhat.'
     )
   }
+
+  Bun.serve({
+    fetch: app.fetch,
+    port,
+  })
 }
 
 main().catch((error) => {

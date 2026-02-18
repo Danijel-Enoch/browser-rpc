@@ -1,4 +1,4 @@
-import { serveStatic } from '@hono/node-server/serve-static'
+import { serveStatic } from 'hono/bun'
 import { existsSync, readFileSync } from 'fs'
 import type { Context } from 'hono'
 import { Hono } from 'hono'
